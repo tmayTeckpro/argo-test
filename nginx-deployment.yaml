@@ -1,0 +1,52 @@
+# Namespace und Injection aktivieren
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-app
+  labels:
+    istio-injection: enabled
+---
+# NGINX Deployment & Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: nginx-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: nginx-app
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 30849
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  type: NodePort
